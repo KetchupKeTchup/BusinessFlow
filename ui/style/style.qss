@@ -1,0 +1,15 @@
+#content_area{
+    background-color: #F0FFF0;
+}
+
+#Sidebar {
+    background-color: #1E90FF;
+}
+#layout{
+    background-color: #1E90FF;
+}
+#feedback_title{
+    font-size: 24px;
+    font-weight: bold;
+    color:#fff;
+}
