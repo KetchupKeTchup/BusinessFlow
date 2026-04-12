@@ -1,3 +1,4 @@
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QTableWidget, QHeaderView, QLabel,
@@ -7,15 +8,14 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from src.db_manager import DatabaseManager
 
-class AddFeedbackDiaolog(QDialog):
+class AddFeedbackDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.setWindowTitle("Додати нову Скаргу або Пропозицію")
         self.setFixedSize(850,600)
 
-        layout = QVBoxLayout(self)
-
+        form_layout = QFormLayout(self)
         self.option = QComboBox()
         self.option.addItems(["Скарга", "Пропозиція"])
 
@@ -23,27 +23,32 @@ class AddFeedbackDiaolog(QDialog):
         self.author_name.setPlaceholderText("Вкажіть ім'я.")
 
         self.priority = QComboBox()
-        self.priority.addItems(["Важливо", "Не терміново"])
+        self.priority.addItems(["Високий", "Середній", "Низький"])
 
         self.text_feedback = QTextEdit()
 
         btn_layout = QHBoxLayout()
         self.btn_add = QPushButton("Додати")
+        self.btn_cancel = QPushButton("Скасувати")
+        btn_layout.addWidget(self.btn_add)
+        btn_layout.addWidget(self.btn_cancel)
 
-        layout.addRow("Вибір",self.option)
-        layout.addRow("Ім'я хто запропонував", self.author_name)
-        layout.addRow("Важливість", self.priority)
-        layout.addRow("Опис", self.text_feedback)
+        form_layout.addRow("Вибір", self.option)
+        form_layout.addRow("Ім'я хто запропонував", self.author_name)
+        form_layout.addRow("Важливість", self.priority)
+        form_layout.addRow("Опис", self.text_feedback)
+        form_layout.addRow(btn_layout)
+
         self.btn_add.clicked.connect(self.accept)
+        self.btn_cancel.clicked.connect(self.reject)
 
 
-
-class FeedbackDiaolog(QWidget):
+class FeedbackMain(QWidget):
     def __init__(self):
         super().__init__()
         self.db = DatabaseManager()
-        self.load_data()
         self.setup_ui()
+        self.load_data()
 
     def setup_ui(self):
         # Головний layout для цього екрану
@@ -54,7 +59,7 @@ class FeedbackDiaolog(QWidget):
         top_panel = QHBoxLayout()
 
         title = QLabel("Скарги - Пропозиції")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; color: #000; color:#fff")
+        title.setStyleSheet("font-size: 24px; font-weight: bold; color: #fff;")
 
         self.btn_add = QPushButton("+ Новий запис")
         self.btn_add.setFixedWidth(200)
@@ -66,7 +71,7 @@ class FeedbackDiaolog(QWidget):
 
         # Таблиця
         self.table = QTableWidget(0, 6)
-        self.table.setHorizontalHeaderLabels(["Номер","Дата","Ім'я", "Тип", "Опис", "Статус"])
+        self.table.setHorizontalHeaderLabels(["Дата","Ім'я","Тип","Опис","Статус","Приорітет"])
         # self.table.setColumnWidth(6,160)
 
         # Робимо так, щоб колонки автоматично розтягувалися на всю ширину
@@ -84,37 +89,45 @@ class FeedbackDiaolog(QWidget):
     def load_data(self):
         """Очищає таблицю і заповнює її даними з бази"""
         self.table.setRowCount(0)  # Очищення старих рядків
-        transactions = self.db.get_all_feedback() # отримання всіх даних
+        feedback = self.db.get_all_feedback()
 
-        for row_idx, row_data in enumerate(transactions):
-            self.table.insertRow(row_idx)
-            real_db_id = row_data[0]
+        for row_idx, row_data in enumerate(feedback):
+            self.table.insertRow(row_idx) # створення нового рядка
+            id_feedback = row_data[0]
+            date = row_data[1]
 
-            # Колонка 0: Створення візуального порядкового номеру
-            visual_number = str(row_idx + 1)
-            cell_id_widget = QTableWidgetItem(visual_number)
-            cell_id_widget.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            # Приховування справжнього id всередині цієї клітинки (UserRole - це сховище для розробника)
-            cell_id_widget.setData(Qt.ItemDataRole.UserRole, real_db_id)
-            self.table.setItem(row_idx, 0, cell_id_widget)
+            # Колонка 0 додаєм туди дату замість індекса
+            col_date = QTableWidgetItem(date)
+            col_date.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            # Ховаємо id під датою
+            col_date.setData(Qt.ItemDataRole.UserRole, id_feedback)
+            self.table.setItem(row_idx, 0, col_date)
 
-            # Заповнення інших колонок починаючи з індексу 1
-            for col_idx in range(1, len(row_data)):
-                item_text = str(row_data[col_idx])
+            mapping = [(1,2),(2,3),(3,4),(4,5),(5,7)]
+            for ui_col, db_col in mapping:
+                item_text = str(row_data[db_col]) if row_data[db_col] else ""
                 cell_widget = QTableWidgetItem(item_text)
                 cell_widget.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.table.setItem(row_idx, col_idx, cell_widget)
+                self.table.setItem(row_idx, ui_col, cell_widget)
 
     def open_add_feedback(self):
         """зробити перевірки на введеня тексту"""
-        dialog = AddFeedbackDiaolog(self)
+        dialog = AddFeedbackDialog(self)
         # данні з полів
         if dialog.exec() == QDialog.DialogCode.Accepted:
             t_type = dialog.option.currentText()
-            author_name = dialog.author_name.text()
-            priority = dialog.priority.currentText()
+            author_name = dialog.author_name.text().strip() or "Анонім"
+            t_priority = dialog.priority.currentText()
             text_feedback = dialog.text_feedback.toPlainText()
 
+            if not text_feedback.strip(): # щоб не пропустити пробіл
+                QMessageBox.warning(self,"Увага","Поле з причиною не може бути порожнім!")
+                return
+
             # Запис в бд
-            self.db.add_feedback(name_author=author_name,f_type=t_type,description=text_feedback, priority=priority)
+            self.db.add_feedback(name_author=author_name, f_type=t_type, description=text_feedback, priority=t_priority)
             self.load_data()
+
+
+    def show_context_menu(self):
+        pass
