@@ -3,10 +3,12 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QStackedWidget)
 
 
-from ui.FeedbackMain import FeedbackMain
-from ui.Sidebar import Sidebar
-from ui.Dashboard import Dashboard
-from ui.Transactions import Transactions
+from src.Modules.Feedback.FeedbackMain import FeedbackMain
+from src.Modules.Sidebar.Sidebar import Sidebar
+from src.Modules.Dashboard.Dashboard import Dashboard
+from src.Modules.Transaction.Transactions import Transactions
+from src.Modules.RegularPayments.RegularPaymentsUi import RecurringPaymentWindow
+from src.Modules.Inventory.InventoryUi import InventoryWindow
 
 
 
@@ -37,9 +39,13 @@ class ERMMainWindow(QMainWindow):
         self.dashboard = Dashboard()
         self.transaction_view = Transactions()
         self.feedback = FeedbackMain()
+        self.inventory = InventoryWindow()
+        self.payments = RecurringPaymentWindow()
         self.content_stack.addWidget(self.dashboard)
         self.content_stack.addWidget(self.transaction_view)
         self.content_stack.addWidget(self.feedback)
+        self.content_stack.addWidget(self.inventory)
+        self.content_stack.addWidget(self.payments)
 
 
         # Підключення сигналу від sidebar
@@ -52,6 +58,8 @@ class ERMMainWindow(QMainWindow):
         self.sidebar.btn_dashboard.clicked.connect(lambda: self.content_stack.setCurrentIndex(0))
         self.sidebar.btn_transactions.clicked.connect(lambda: self.content_stack.setCurrentIndex(1))
         self.sidebar.btn_feedback.clicked.connect(lambda: self.content_stack.setCurrentIndex(2))
+        self.sidebar.btn_inventory.clicked.connect(lambda: self.content_stack.setCurrentIndex(3))
+        self.sidebar.btn_payment.clicked.connect(lambda: self.content_stack.setCurrentIndex(4))
 
 def load_styles(style):
     """
@@ -60,7 +68,7 @@ def load_styles(style):
         :return:
     """
     try:
-        with open("ui/style/style.qss", "r", encoding="utf-8") as style_file:
+        with open("src/UI/style/style.qss", "r", encoding="utf-8") as style_file:
             style_content = style_file.read()
             style.setStyleSheet(style_content)
     except FileNotFoundError:

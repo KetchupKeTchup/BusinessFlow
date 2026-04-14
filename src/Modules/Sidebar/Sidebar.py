@@ -21,9 +21,15 @@ class Sidebar(QFrame):
         self.btn_documents = QPushButton("📁 Документи")
         self.btn_feedback = QPushButton("💬 Пропозиції/Скарги")
         self.btn_inventory = QPushButton("📦 Склад")
+        self.btn_payment = QPushButton("$ Регулярні платежі")
         self.btn_work_planning = QPushButton("🗓️ ️Планування робіт")
 
-        buttons = [self.btn_dashboard,self.btn_transactions,self.btn_feedback,self.btn_inventory,self.btn_work_planning]
+        buttons = [self.btn_dashboard,
+                   self.btn_transactions,
+                   self.btn_feedback,
+                   self.btn_inventory,
+                   self.btn_payment,
+                   self.btn_work_planning]
 
         for btn in buttons:
             btn.setCursor(Qt.CursorShape.PointingHandCursor)

@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
                              QDoubleSpinBox, QMessageBox, QTableWidgetItem,QMenu)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QDoubleValidator
-from src.db_manager import DatabaseManager
+from src.DataBase.db_manager import TransactionManager
 
 class AddTransactionDialog(QDialog):
     """Спливаюче вікно для додавання нової транзакції"""
@@ -50,7 +50,7 @@ class AddTransactionDialog(QDialog):
 class Transactions(QWidget):
     def __init__(self):
         super().__init__()
-        self.db = DatabaseManager()
+        self.db = TransactionManager()
         self.setup_ui()
         self.load_data()
 

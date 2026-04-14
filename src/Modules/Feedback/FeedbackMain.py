@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QMessageBox, QMenu, QTableWidgetItem, QLineEdit
 )
 from PyQt6.QtCore import Qt
-from src.db_manager import DatabaseManager
+from src.DataBase.db_manager import FeedbackManager
 
 class AddFeedbackDialog(QDialog):
     def __init__(self, parent=None):
@@ -46,7 +46,7 @@ class AddFeedbackDialog(QDialog):
 class FeedbackMain(QWidget):
     def __init__(self):
         super().__init__()
-        self.db = DatabaseManager()
+        self.db = FeedbackManager()
         self.setup_ui()
         self.load_data()
 
