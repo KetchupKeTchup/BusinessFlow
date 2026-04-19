@@ -37,7 +37,6 @@ class App:
 
     def _setup_navigation(self):
         sidebar = self.main_window.sidebar
-
         sidebar.btn_dashboard.clicked.connect(lambda: self.navigate("dashboard"))
         sidebar.btn_transactions.clicked.connect(lambda: self.navigate("transactions"))
         sidebar.btn_feedback.clicked.connect(lambda: self.navigate("feedback"))

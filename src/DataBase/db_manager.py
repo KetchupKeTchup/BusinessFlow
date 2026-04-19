@@ -3,15 +3,14 @@ import json
 from datetime import datetime
 
 class DatabaseManager:
-    def __init__(self, db_path):
-        self.db_path = db_path
+    def __init__(self, db_path=None):
+        self.db_path = db_path or "data/erm_database.db"
 
     def get_connection(self):
         return sqlite3.connect(self.db_path)
 
-
 class TransactionManager(DatabaseManager):
-    def __init__(self,db_path = "data/db_transactions.db"):
+    def __init__(self,db_path = None):
         super().__init__(db_path)
         self.init_db()
 
@@ -66,10 +65,8 @@ class TransactionManager(DatabaseManager):
                 """)
             return cursor.fetchall()
 
-
-
 class FeedbackManager(DatabaseManager):
-    def __init__(self,db_path="data/db_feedback.db"):
+    def __init__(self,db_path=None):
         super().__init__(db_path)
         self.init_db()
 
@@ -108,6 +105,82 @@ class FeedbackManager(DatabaseManager):
             cursor.execute("""SELECT id, date, name, type, description, status, resolution_note, priority FROM feedback""")
             return cursor.fetchall()
 
+class RegularPaymentsDB(DatabaseManager):
+    def __init__(self,db_path = None):
+        super().__init__(db_path)
+        self.init_db()
 
+    def init_db(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
 
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS regular_payments(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                amount REAL NOT NULL,
+                category TEXT NOT NULL,
+                day_of_month INTEGER NOT NULL
+               )  
+            """)
+            conn.commit()
 
+    def add_regula_payment(self, name, amount, category, day):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO regular_payments(name, amount, category, day_of_month) VALUES(?,?,?,?)
+            """, (name, amount, category, day))
+            conn.commit()
+
+    def get_all_regular_payments(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""SELECT name,amount,category,day_of_month FROM regular_payments""")
+            return cursor.fetchall()
+
+# В розробці
+class UsersDB(DatabaseManager):
+    def __init__(self,db_path=None):
+        super().__init__(db_path)
+
+    def init_db(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users(
+                    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email,
+                    password
+                    )
+                """)
+            conn.commit()
+
+class CategoriesDB(DatabaseManager):
+    def __init__(self,db_path = None):
+        super().__init__(db_path)
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS categories(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    category_id INTEGER NOT NULL,
+            """)
+            conn.commit()
+
+class BudgetsDB(DatabaseManager):
+    def __init__(self,db_path = None):
+        super().__init__(db_path)
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS budgets(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    FOREIGN KEY (category) REFERENCES categories(category_id) ON DELETE CASCADE,
+                    year INTEGER NOT NULL,
+                    allocated_amount INTEGER NOT NULL
+            """)
+            conn.commit()
