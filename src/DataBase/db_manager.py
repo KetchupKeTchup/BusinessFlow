@@ -160,27 +160,34 @@ class UsersDB(DatabaseManager):
 class CategoriesDB(DatabaseManager):
     def __init__(self,db_path = None):
         super().__init__(db_path)
+        self.init_db()
+
+    def init_db(self):
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS categories(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    category_id INTEGER NOT NULL,
+                    name TEXT NOT NULL UNIQUE
             """)
             conn.commit()
 
 class BudgetsDB(DatabaseManager):
     def __init__(self,db_path = None):
         super().__init__(db_path)
+        self.init_db()
+
+    def init_db(self):
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS budgets(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    FOREIGN KEY (category) REFERENCES categories(category_id) ON DELETE CASCADE,
+                    category_id INTEGER NOT NULL,
                     year INTEGER NOT NULL,
-                    allocated_amount INTEGER NOT NULL
+                    allocated_amount INTEGER NOT NULL,
+                    FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE,
+                    UNIQUE (category_id, year)
             """)
+
             conn.commit()

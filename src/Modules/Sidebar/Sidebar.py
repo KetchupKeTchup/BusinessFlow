@@ -22,6 +22,7 @@ class Sidebar(QFrame):
         self.btn_feedback = QPushButton("💬 Пропозиції/Скарги")
         self.btn_inventory = QPushButton("📦 Склад")
         self.btn_payment = QPushButton("$ Регулярні платежі")
+        self.btn_budget = QPushButton("📊 Планування бюджету")
         self.btn_work_planning = QPushButton("🗓️ ️Планування робіт")
 
         buttons = [self.btn_dashboard,
@@ -29,6 +30,7 @@ class Sidebar(QFrame):
                    self.btn_feedback,
                    self.btn_inventory,
                    self.btn_payment,
+                   self.btn_budget,
                    self.btn_work_planning]
 
         for btn in buttons:
