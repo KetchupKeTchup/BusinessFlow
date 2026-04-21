@@ -139,7 +139,7 @@ class RegularPaymentsDB(DatabaseManager):
             cursor.execute("""SELECT name,amount,category,day_of_month FROM regular_payments""")
             return cursor.fetchall()
 
-# В розробці
+
 class UsersDB(DatabaseManager):
     def __init__(self,db_path=None):
         super().__init__(db_path)
@@ -168,9 +168,41 @@ class CategoriesDB(DatabaseManager):
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS categories(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL UNIQUE
+                    name TEXT NOT NULL UNIQUE)
             """)
             conn.commit()
+
+            default_categories = [
+                "Proveedores",
+                "Ascensores",
+                "Fumigación",
+                "Mantenimiento puertas de garaje",
+                "Mantenimiento extintores",
+                "Mantenimiento y limpieza",
+                "Entidad Urbanística de Conservación",
+                "Reparaciones",
+                "Administración",
+                "Protección de datos",
+                "Otros profesionales",
+                "Seguro",
+                "Comisiones bancarias",
+                "Correos",
+                "Electricidad",
+                "Agua",
+                "Basura y alcantarillado",
+                "Vado",
+                "Igic soportado",
+                "Fondo de reserva 10%",
+                "Sanciones tributarias",
+                "Internet porteros",
+                "Coordinación actividades empresariales"
+            ]
+
+            for cat_name in default_categories:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO categories(name) VALUES(?)
+                """, (cat_name,))
+                conn.commit()
 
 class BudgetsDB(DatabaseManager):
     def __init__(self,db_path = None):
@@ -187,7 +219,63 @@ class BudgetsDB(DatabaseManager):
                     year INTEGER NOT NULL,
                     allocated_amount INTEGER NOT NULL,
                     FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE,
-                    UNIQUE (category_id, year)
+                    UNIQUE (category_id, year))
             """)
 
             conn.commit()
+
+    def set_budgets(self,category_id,year,amount):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""SELECT id FROM budget WHERE name = ?""", (category_id,))
+            res = cursor.fetchone()
+            if res:
+                cat_id = res[0]
+                cursor.execute("""
+                INSERT OR REPLACE INTO budgets(category_id, year, allocated_amount) 
+                VALUES(?,?,?)""", (cat_id,year, abs(amount)))
+                conn.commit()
+
+    # def get_budget_by_year(self,year):
+    #     with self.get_connection() as conn:
+    #         cursor = conn.cursor()
+    #         cursor.execute("""
+    #             SELECT c.name, b.allocated_amount
+    #             FROM budgets b
+    #             JOIN categories c ON c.category_id = b.id
+    #             WHERE b.year = ?
+    #             ORDER BY b.allocated_amount DESC
+    #         """,(year,))
+    #         conn
+
+    def set_budget(self, category_name, year, amount):
+        """Встановлює суму бюджету для категорії за назвою"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            # Шукаємо ID категорії
+            cursor.execute("SELECT id FROM categories WHERE name = ?", (category_name,))
+            res = cursor.fetchone()
+            if res:
+                cat_id = res[0]
+                # Записуємо бюджет
+                cursor.execute("""
+                    INSERT OR IGNORE INTO budgets (category_id, year, allocated_amount)
+                    VALUES (?, ?, ?)
+                """, (cat_id, year, amount))
+            conn.commit()
+
+    def get_budget_stats(self, year):
+        """Об'єднує категорії та бюджети в один список для UI"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT c.name, b.allocated_amount, 0 -- 0 це заглушка для фактичних витрат
+                FROM budgets b
+                JOIN categories c ON b.category_id = c.id
+                WHERE b.year = ?
+            """, (year,))
+            return cursor.fetchall()
+
+
+
+

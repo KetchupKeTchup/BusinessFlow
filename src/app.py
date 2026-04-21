@@ -5,7 +5,7 @@ from src.Modules.Dashboard.Dashboard import Dashboard
 from src.Modules.Transaction.Transactions import Transactions
 from src.Modules.RegularPayments.RegularPaymentsUi import RecurringPaymentWindow
 from src.Modules.Inventory.InventoryUi import InventoryWindow
-from src.Modules.budget.budgetUi import BudgetWindow
+from src.Modules.budget.budgetController import BudgetController
 
 
 class App:
@@ -24,7 +24,7 @@ class App:
         self.feedback = FeedbackMain()
         self.inventory = InventoryWindow()
         self.payments = RecurringPaymentWindow()
-        self.budget = BudgetWindow()
+        self.budget = BudgetController()
 
     def _register_pages(self):
         self.pages = {
