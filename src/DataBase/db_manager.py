@@ -139,7 +139,6 @@ class RegularPaymentsDB(DatabaseManager):
             cursor.execute("""SELECT name,amount,category,day_of_month FROM regular_payments""")
             return cursor.fetchall()
 
-
 class UsersDB(DatabaseManager):
     def __init__(self,db_path=None):
         super().__init__(db_path)
@@ -236,18 +235,6 @@ class BudgetsDB(DatabaseManager):
                 VALUES(?,?,?)""", (cat_id,year, abs(amount)))
                 conn.commit()
 
-    # def get_budget_by_year(self,year):
-    #     with self.get_connection() as conn:
-    #         cursor = conn.cursor()
-    #         cursor.execute("""
-    #             SELECT c.name, b.allocated_amount
-    #             FROM budgets b
-    #             JOIN categories c ON c.category_id = b.id
-    #             WHERE b.year = ?
-    #             ORDER BY b.allocated_amount DESC
-    #         """,(year,))
-    #         conn
-
     def set_budget(self, category_name, year, amount):
         """Встановлює суму бюджету для категорії за назвою"""
         with self.get_connection() as conn:
@@ -265,16 +252,40 @@ class BudgetsDB(DatabaseManager):
             conn.commit()
 
     def get_budget_stats(self, year):
-        """Об'єднує категорії та бюджети в один список для UI"""
+        """Об'єднує категорії, бюджети та реальні транзакції в один список для UI"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # Беремо план з budgets, а витрати сумуємо з transactions
             cursor.execute("""
-                SELECT c.name, b.allocated_amount, 0 -- 0 це заглушка для фактичних витрат
+                SELECT 
+                    c.name, 
+                    b.allocated_amount, 
+                    COALESCE(SUM(t.sum), 0) as spent
                 FROM budgets b
                 JOIN categories c ON b.category_id = c.id
+                LEFT JOIN transactions t ON c.name = t.category 
+                    AND strftime('%Y', t.date) = CAST(b.year AS TEXT)
                 WHERE b.year = ?
+                GROUP BY c.id
             """, (year,))
             return cursor.fetchall()
+
+    def update_budget_amount(self, category_name, year, new_amount):
+        """Оновлення бюджету вибраної категорії"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            # 1. Знаходимо id категорії
+            cursor.execute("""SELECT id FROM categories WHERE name = ?""", (category_name,))
+            res = cursor.fetchone()
+            if res:
+                # якщо res найдено тоді cat_id буде дорівнювати 1 елементу тобто id res[0]
+                cat_id = res[0]
+                # 2.Оновлюємо суму
+                cursor.execute("""
+                    UPDATE budgets SET allocated_amount = ?
+                    WHERE category_id = ? AND year = ?
+                """,(new_amount,cat_id,year))
+            conn.commit()
 
 
 

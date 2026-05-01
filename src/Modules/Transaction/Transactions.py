@@ -6,6 +6,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QDoubleValidator
 from src.DataBase.db_manager import TransactionManager
 
+
 class AddTransactionDialog(QDialog):
     """Спливаюче вікно для додавання нової транзакції"""
     def __init__(self, parent=None):
