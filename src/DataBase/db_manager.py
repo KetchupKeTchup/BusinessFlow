@@ -105,6 +105,51 @@ class FeedbackManager(DatabaseManager):
             cursor.execute("""SELECT id, date, name, type, description, status, resolution_note, priority FROM feedback""")
             return cursor.fetchall()
 
+    def update_status(self, feedback_id, new_status):
+        """Оновлює статус звернення (скарги/пропозиції) за його ID"""
+        # Використовуємо підключення до БД (переконайся, що get_connection() написано так, як в інших твоїх методах)
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE feedback 
+                SET status = ? 
+                WHERE id = ?
+            """, (new_status, feedback_id))
+            conn.commit()
+            print(f"Статус запису з ID {feedback_id} успішно змінено на '{new_status}'")
+
+    def get_feedback_by_id(self, f_id):
+        """Отримує всі дані одного запису для заповнення вікна редагування"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM feedback WHERE id = ?", (f_id,))
+            return cursor.fetchone()
+
+    def update_feedback_full(self, f_id, name, f_type, desc, priority, status, file_path):
+        """Оновлює абсолютно всі поля, включно з файлом. Якщо колонки файлу немає - створює її."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                # Спроба оновити всі поля
+                cursor.execute("""
+                    UPDATE feedback 
+                    SET name = ?, type = ?, description = ?, priority = ?, status = ?, file_path = ?
+                    WHERE id = ?
+                """, (name, f_type, desc, priority, status, file_path, f_id))
+            except Exception as e:
+                # Якщо таблиця стара і в ній ще немає колонки file_path
+                if "no such column: file_path" in str(e).lower():
+                    cursor.execute("ALTER TABLE feedback ADD COLUMN file_path TEXT")
+                    # Повторюємо запит після створення колонки
+                    cursor.execute("""
+                        UPDATE feedback 
+                        SET name = ?, type = ?, description = ?, priority = ?, status = ?, file_path = ?
+                        WHERE id = ?
+                    """, (name, f_type, desc, priority, status, file_path, f_id))
+                else:
+                    raise e
+            conn.commit()
+
 class RegularPaymentsDB(DatabaseManager):
     def __init__(self,db_path = None):
         super().__init__(db_path)
@@ -286,6 +331,11 @@ class BudgetsDB(DatabaseManager):
                     WHERE category_id = ? AND year = ?
                 """,(new_amount,cat_id,year))
             conn.commit()
+
+class DashboardManager(DatabaseManager):
+    def __init__(self, db_path=None):
+        super().__init__(db_path)
+        self.init_db()
 
 
 

@@ -1,7 +1,7 @@
 from src.core.main_window import ERMMainWindow
 # Modules
 from src.Modules.Feedback.FeedbackController import FeedbackController
-from src.Modules.Dashboard.Dashboard import Dashboard
+from src.Modules.Dashboard.DashboardController import DashboardController
 from src.Modules.Transaction.Transactions import Transactions
 from src.Modules.RegularPayments.RegularPaymentsUi import RecurringPaymentWindow
 from src.Modules.Inventory.InventoryUi import InventoryWindow
@@ -19,7 +19,7 @@ class App:
         self._setup_navigation()
 
     def _init_modules(self):
-        self.dashboard = Dashboard()
+        self.dashboard = DashboardController()
         self.transaction_view = Transactions()
         self.feedback = FeedbackController()
         self.inventory = InventoryWindow()

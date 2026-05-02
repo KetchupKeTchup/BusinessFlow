@@ -1,8 +1,6 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QTableWidget, QHeaderView, QLabel,
-    QDialog, QFormLayout, QComboBox, QTextEdit,
-    QMessageBox, QTableWidgetItem, QLineEdit
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QHeaderView, QLabel,
+    QDialog, QFormLayout, QComboBox, QTextEdit, QMessageBox, QTableWidgetItem, QLineEdit, QFileDialog
 )
 from PyQt6.QtCore import Qt
 
@@ -79,3 +77,66 @@ class AddFeedbackDialog(QDialog):
 
         self.btn_add.clicked.connect(self.accept)
         self.btn_cancel.clicked.connect(self.reject)
+
+class EditFeedbackDialog(QDialog):
+    def __init__(self, current_data, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Редагування запису")
+        self.setFixedSize(850, 650)
+
+        # current_data - це рядок з БД: (id, date, name, type, description, status, resolution_note, priority, [file_path])
+        form_layout = QFormLayout(self)
+
+        self.option = QComboBox()
+        self.option.addItems(["Скарга", "Пропозиція"])
+        self.option.setCurrentText(current_data[3] if current_data[3] else "Скарга")
+
+        self.author_name = QLineEdit()
+        self.author_name.setText(current_data[2] if current_data[2] else "")
+
+        self.priority = QComboBox()
+        self.priority.addItems(["Високий", "Середній", "Низький"])
+        self.priority.setCurrentText(current_data[7] if len(current_data) > 7 and current_data[7] else "Середній")
+
+        self.status_cb = QComboBox()
+        self.status_cb.addItems(["Нове", "В процесі", "Вирішено"])
+        self.status_cb.setCurrentText(current_data[5] if len(current_data) > 5 and current_data[5] else "Нове")
+
+        self.text_feedback = QTextEdit()
+        self.text_feedback.setText(current_data[4] if len(current_data) > 4 and current_data[4] else "")
+
+        # --- РОБОТА З ФАЙЛОМ ---
+        self.file_path_input = QLineEdit()
+        # Безпечно беремо файл, якщо колонка вже існувала
+        current_file = current_data[8] if len(current_data) > 8 and current_data[8] else ""
+        self.file_path_input.setText(current_file)
+
+        self.btn_browse = QPushButton("📁 Вибрати файл")
+        self.btn_browse.clicked.connect(self.browse_file)
+
+        file_layout = QHBoxLayout()
+        file_layout.addWidget(self.file_path_input)
+        file_layout.addWidget(self.btn_browse)
+
+        # --- КНОПКИ ---
+        btn_layout = QHBoxLayout()
+        self.btn_save = QPushButton("Зберегти зміни")
+        self.btn_cancel = QPushButton("Скасувати")
+        btn_layout.addWidget(self.btn_save)
+        btn_layout.addWidget(self.btn_cancel)
+
+        form_layout.addRow("Тип:", self.option)
+        form_layout.addRow("Ім'я автора:", self.author_name)
+        form_layout.addRow("Важливість:", self.priority)
+        form_layout.addRow("Статус:", self.status_cb)
+        form_layout.addRow("Опис:", self.text_feedback)
+        form_layout.addRow("Прикріплений файл:", file_layout)
+        form_layout.addRow(btn_layout)
+
+        self.btn_save.clicked.connect(self.accept)
+        self.btn_cancel.clicked.connect(self.reject)
+
+    def browse_file(self):
+        file_name, _ = QFileDialog.getOpenFileName(self, "Вибрати файл", "", "All Files (*);;PDF (*.pdf);;Images (*.png *.jpg)")
+        if file_name:
+            self.file_path_input.setText(file_name)
