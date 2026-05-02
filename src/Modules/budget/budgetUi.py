@@ -203,8 +203,8 @@ class TransactionHistoryDialog(QDialog):
         self.layout = QVBoxLayout(self)
 
         # Створюємо таблицю
-        self.table = QTableWidget(0, 4)
-        self.table.setHorizontalHeaderLabels(["ID", "Дата", "Сума (€)", "Дія"])
+        self.table = QTableWidget(0, 5)
+        self.table.setHorizontalHeaderLabels(["ID", "Дата", "Сума (€)","Фактура", "Дія"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setColumnHidden(0, True)  # Ховаємо технічний ID бази даних
 

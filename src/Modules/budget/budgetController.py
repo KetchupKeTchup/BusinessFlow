@@ -259,25 +259,34 @@ class BudgetController(QWidget):
         dialog = TransactionHistoryDialog(category_name, self)
 
         # Заповнюємо таблицю у вікні
+        # Заповнюємо таблицю у вікні
         dialog.table.setRowCount(len(transactions))
         for i, t in enumerate(transactions):
-            t_id, date_str, amount, receipt = t
+            t_id, date_str, amount, receipt_path = t  # Тепер розпаковуємо 4 змінні!
 
-            # Відображаємо тільки дату (без годин)
             short_date = date_str.split(" ")[0] if " " in date_str else date_str
 
             dialog.table.setItem(i, 0, QTableWidgetItem(str(t_id)))
             dialog.table.setItem(i, 1, QTableWidgetItem(short_date))
             dialog.table.setItem(i, 2, QTableWidgetItem(f"{amount:.2f}"))
 
-            # Створюємо кнопку "Видалити" для кожного рядка
             from PyQt6.QtWidgets import QPushButton
+
+            # --- НОВА КНОПКА: ВІДКРИТИ ЧЕК ---
+            btn_open = QPushButton("👁 Відкрити")
+            if not receipt_path:  # Якщо при додаванні файл не вибрали
+                btn_open.setEnabled(False)
+                btn_open.setText("Немає файлу")
+            else:
+                # Використовуємо лямбду, щоб передати шлях
+                btn_open.clicked.connect(lambda checked, path=receipt_path: self.open_receipt(path))
+            dialog.table.setCellWidget(i, 3, btn_open)  # Ставимо в 4-ту колонку (індекс 3)
+
+            # --- СТАРА КНОПКА: ВИДАЛИТИ ---
             btn_delete = QPushButton("🗑 Видалити")
             btn_delete.setStyleSheet("color: #ff4c4c; font-weight: bold;")
-
-            # Прив'язуємо ID до кнопки через лямбду
             btn_delete.clicked.connect(lambda checked, t_id=t_id: self.delete_and_refresh(t_id, dialog))
-            dialog.table.setCellWidget(i, 3, btn_delete)
+            dialog.table.setCellWidget(i, 4, btn_delete)  # Перемістили в 5-ту колонку (індекс 4)
 
         dialog.exec()
 
@@ -290,3 +299,19 @@ class BudgetController(QWidget):
             self.service.delete_transaction(t_id)  # Видаляємо з БД
             dialog.accept()  # Закриваємо вікно історії
             self.load_data()  # Оновлюємо головну таблицю і графік
+
+    def open_receipt(self, file_path):
+        """Відкриває файл фактури у стандартній програмі ОС"""
+        import os
+        from PyQt6.QtGui import QDesktopServices
+        from PyQt6.QtCore import QUrl
+
+        # Перетворюємо відносний шлях в абсолютний (повний шлях на комп'ютері)
+        abs_path = os.path.abspath(file_path)
+
+        # Перевіряємо, чи файл досі фізично існує в папці
+        if os.path.exists(abs_path):
+            # Магія PyQt: відкриває будь-що як системне посилання
+            QDesktopServices.openUrl(QUrl.fromLocalFile(abs_path))
+        else:
+            QMessageBox.warning(self, "Помилка", f"Файл не знайдено за шляхом:\n{abs_path}")
