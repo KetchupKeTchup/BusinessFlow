@@ -1,12 +1,30 @@
 import sqlite3
+import os
+import sys
 import json
 from datetime import datetime
+
+# --- РОЗУМНИЙ ШЛЯХ ДО БАЗИ ДАНИХ ---
+if getattr(sys, 'frozen', False):
+    # Якщо програма запущена як зібраний .exe
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # Якщо запущена через код (PyCharm/VS Code)
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+# Створюємо папку data поруч із програмою, якщо її немає
+DATA_DIR = os.path.join(BASE_DIR, "data")
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# Точний абсолютний шлях до файлу БД
+DB_PATH = os.path.join(DATA_DIR, "database.db")
 
 class DatabaseManager:
     def __init__(self, db_path=None):
         self.db_path = db_path or "data/erm_database.db"
 
     def get_connection(self):
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         return sqlite3.connect(self.db_path)
 
 class TransactionManager(DatabaseManager):
