@@ -32,7 +32,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='my_app',  # <-- назва exe
+    name='BusinessFlow',  
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

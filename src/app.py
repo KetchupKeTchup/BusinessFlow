@@ -19,12 +19,12 @@ class App:
         self._setup_navigation()
 
     def _init_modules(self):
+        self.budget = BudgetController()
         self.dashboard = DashboardController()
         self.transaction_view = Transactions()
         self.feedback = FeedbackController()
         self.inventory = InventoryWindow()
         self.payments = RecurringPaymentWindow()
-        self.budget = BudgetController()
 
     def _register_pages(self):
         self.pages = {
