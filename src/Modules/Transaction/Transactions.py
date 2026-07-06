@@ -191,8 +191,8 @@ class Transactions(QWidget):
 
     def edit_record(self, row_table):
         """Logic for editing record"""
-        t_id = self.table.item(row, 0).text()
-        t_sum = self.table.item(row, 4).text()
+        t_id = self.table.item(row_table, 0).text()
+        t_sum = self.table.item(row_table, 4).text()
 
         QMessageBox.information(
             self,

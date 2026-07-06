@@ -1,9 +1,6 @@
-import sqlite3
-import os
-import sys
-import json
 from datetime import datetime
 from DataBase.db_manager import DatabaseManager
+
 class FeedbackManager(DatabaseManager):
     def __init__(self,db_path=None):
         super().__init__(db_path)
