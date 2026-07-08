@@ -9,4 +9,7 @@ class TransactionController(QWidget):
         super().__init__()
         self.ui = TransactionWindow()
 
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.ui)
        
