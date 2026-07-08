@@ -113,7 +113,6 @@ class BudgetsDB(DatabaseManager):
                 """,(new_amount,cat_id,year))
             conn.commit()
 
-
 class CategoriesDB(DatabaseManager):
     def __init__(self,db_path = None):
         super().__init__(db_path)
@@ -166,7 +165,6 @@ class DashboardManager(DatabaseManager):
         super().__init__(db_path)
         self.init_db()
 
-
 class FeedbackManager(DatabaseManager):
     def __init__(self,db_path=None):
         super().__init__(db_path)
@@ -197,7 +195,8 @@ class FeedbackManager(DatabaseManager):
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO feedback(date, name, type, description, status, resolution_note, priority) VALUES (?, ?, ?, ?, ?, ?, ?)""", (curren_data, name_author, f_type, description, "New", "", priority))
+                INSERT INTO feedback(date, name, type, description, status, resolution_note, priority) VALUES (?, ?, ?, ?, ?, ?, ?)""", 
+                (curren_data, name_author, f_type, description, "New", "", priority))
             conn.commit()
 
     def get_all_feedback(self):
@@ -259,7 +258,6 @@ class FeedbackManager(DatabaseManager):
             conn.commit()
             print(f"Feedback {f_id} deleted successfully")
 
-
 class RegularPaymentsDB(DatabaseManager):
     def __init__(self,db_path = None):
         super().__init__(db_path)
@@ -293,7 +291,6 @@ class RegularPaymentsDB(DatabaseManager):
             cursor = conn.cursor()
             cursor.execute("""SELECT name,amount,category,day_of_month FROM regular_payments""")
             return cursor.fetchall()
-
 
 class TransactionManager(DatabaseManager):
     """Манажер для работы с транзакциями в базе данных"""

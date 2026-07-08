@@ -6,7 +6,6 @@ class FeedbackController(QWidget):
 
     def __init__(self):
         super().__init__()  # Обов'язкова ініціалізація віджета
-        print("1. Старт ініціалізації Контролера Відгуків")
 
         self.ui = FeedbackWindow()
         self.service = FeedbackServise()
@@ -18,18 +17,14 @@ class FeedbackController(QWidget):
 
         # Підключаємо сигнали
         self.ui.btn_add.clicked.connect(self.open_add_feedback)
-        print("2. Кнопка 'Додати' підключена")
 
         self.ui.table.customContextMenuRequested.connect(self.show_context_menu)
 
         # Завантажуємо дані
-        print("3. Виклик load_data()...")
         self.load_data()
-        print("4. Ініціалізація завершена успішно!")
 
     def load_data(self):
         """Очищає таблицю і заповнює її даними з бази"""
-        print("--- СТАРТ load_data ---")
         try:
             self.ui.table.setRowCount(0)
             feedbacks = self.service.get_all_feedbacks()

@@ -3,6 +3,7 @@ from src.core.main_window import ERMMainWindow
 from src.Modules.Feedback.FeedbackController import FeedbackController
 from src.Modules.Dashboard.DashboardController import DashboardController
 from src.Modules.Transaction.Transactions import Transactions
+from src.Modules.Transaction.transactionController import TransactionController
 from src.Modules.RegularPayments.RegularPaymentsUi import RecurringPaymentWindow
 from src.Modules.Inventory.InventoryUi import InventoryWindow
 from src.Modules.budget.budgetController import BudgetController
