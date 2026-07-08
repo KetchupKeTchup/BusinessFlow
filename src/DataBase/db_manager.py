@@ -251,6 +251,13 @@ class FeedbackManager(DatabaseManager):
                 else:
                     raise e
             conn.commit()
+    def delete_feedback(self, f_id):
+        """Delete a feedback record"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""DELETE FROM feedback WHERE id = ?""", (f_id,))
+            conn.commit()
+            print(f"Feedback {f_id} deleted successfully")
 
 
 class RegularPaymentsDB(DatabaseManager):
@@ -286,8 +293,6 @@ class RegularPaymentsDB(DatabaseManager):
             cursor = conn.cursor()
             cursor.execute("""SELECT name,amount,category,day_of_month FROM regular_payments""")
             return cursor.fetchall()
-
-
 
 
 class TransactionManager(DatabaseManager):

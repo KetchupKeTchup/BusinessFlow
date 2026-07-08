@@ -19,6 +19,9 @@ class App:
         self._setup_navigation()
 
     def _init_modules(self):
+        """
+            Спочатку ініціальзуємо базу даних щоб все прогружалось на екран
+        """
         self.budget = BudgetController()
         self.dashboard = DashboardController()
         self.transaction_view = Transactions()
