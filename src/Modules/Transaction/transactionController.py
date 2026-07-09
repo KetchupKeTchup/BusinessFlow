@@ -16,3 +16,6 @@ class TransactionController(QWidget):
     def open_add_new_transaction(self):
         """Відкриває діалогове вікно"""
         dialog =  AddTransactionDialog(self)
+        
+    def load_data(self):
+        pass

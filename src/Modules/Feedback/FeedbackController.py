@@ -12,7 +12,7 @@ class FeedbackController(QWidget):
 
         # Розміщуємо інтерфейс на екрані контролера (ЯК У БЮДЖЕТІ)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(10, 10, 10, 0)
         layout.addWidget(self.ui)
 
         # Підключаємо сигнали
