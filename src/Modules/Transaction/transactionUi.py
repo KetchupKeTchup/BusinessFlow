@@ -3,6 +3,8 @@ from PyQt6.QtWidgets import (
     QDialog, QFormLayout, QComboBox, QTextEdit, QMessageBox, QTableWidgetItem, QLineEdit, QFileDialog
 )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QDoubleValidator
+from src.UI.components.erm_table import ERMTable
 
 class TransactionWindow(QWidget):
     def __init__(self):
@@ -32,26 +34,58 @@ class TransactionWindow(QWidget):
 
 
         top_panel.addWidget(title) 
+        top_panel.addStretch()
         top_panel.addWidget(self.search_input)
-        top_panel.addStretch()  # Відштовхує кнопку вправо
         top_panel.addWidget(self.btn_add)
         # -----------------------------------------------------------
         
-        # # Таблиця
-        # self.table = QTableWidget(0, 6)
-        # self.table.setHorizontalHeaderLabels(["Номер", "Дата", "Тип", "Категорія", "Сума", "Статус"])
-        # # self.table.setColumnWidth(6,160)
-
-        # # Робимо так, щоб колонки автоматично розтягувалися на всю ширину
-        # self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        # # Дозвіл на кастомне контекстн меню
-        # self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        # # Підключення сигнала правого натискання мишки
-        # self.table.customContextMenuRequested.connect(self.show_context_menu)
-        # self.table.verticalHeader().setVisible(False)
-
+        # Таблиця
+        table_headers = ["Дата","Тип","Категорія","Сума","Статус"]
+        self.table = ERMTable(columns=5, headers=table_headers)
+        
         layout.addLayout(top_panel)
-        # layout.addWidget(self.table)
+        layout.addWidget(self.table)
+
+class AddTransactionDialog(QDialog):
+    """Спливаюче вікно для додавання нової транзакції"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Додати транзакцію")
+        self.setFixedSize(850,400)
+
+        layout = QFormLayout(self)
+
+        self.type_combo = QComboBox()
+        self.type_combo.addItems(["Витрати", "Дохід", "Підписка","Регулярний платіж"])
+
+        self.category_input = QLineEdit()
+        self.category_input.setPlaceholderText("Наприклад: Продукти, Авто...")
+
+        self.sum_input = QLineEdit()
+        self.sum_input.setPlaceholderText("0.00")
+        # Валідатор від 0.0 до 100000, максимум 2 знаки після коми
+        validator = QDoubleValidator(0.0, 1000000.0, 2)
+        # StandardNotation гарантує, що не буде експонеційного формату(типу 1е+06)
+        validator.setNotation(QDoubleValidator.Notation.StandardNotation)
+        self.sum_input.setValidator(validator)
+
+
+        #Кнопки
+        btn_layout = QHBoxLayout()
+        self.btn_save = QPushButton("Зберегти")
+        self.btn_cancel = QPushButton("Скасувати")
+
+        btn_layout.addWidget(self.btn_save)
+        btn_layout.addWidget(self.btn_cancel)
+
+        layout.addRow("Тип", self.type_combo)
+        layout.addRow("Категорія", self.category_input)
+        layout.addRow("Сума", self.sum_input)
+        layout.addRow(btn_layout)
+
+        self.btn_save.clicked.connect(self.accept)
+        self.btn_cancel.clicked.connect(self.reject)
         
 
 
