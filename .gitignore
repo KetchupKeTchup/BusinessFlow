@@ -1,1 +1,9 @@
 venv/
+.venv/
+.sqlite/
+.idea/
+*.pyc
+.env
+env/
+development_plan.md
+data/
