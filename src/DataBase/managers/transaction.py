@@ -3,7 +3,7 @@ import os
 import sys
 import json
 from datetime import datetime
-from DataBase.db_manager import DatabaseManager
+from src.DataBase.db_manager import DatabaseManager
 
 class TransactionManager(DatabaseManager):
     """Манажер для работы с транзакциями в базе данных"""
