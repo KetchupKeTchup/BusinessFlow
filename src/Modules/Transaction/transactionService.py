@@ -13,3 +13,7 @@ class TransactionService:
         """Додає транзакцію в базу даних"""
         self.db.add_transaction(trans_type, category, amount)
     
+    def delete_transaction(self, transaction_id):
+        """Видаляє транзакцію з бази даних"""
+        self.db.delete_transaction(transaction_id)
+    

@@ -51,8 +51,11 @@ class TransactionWindow(QWidget):
         # -----------------------------------------------------------
         
         # Таблиця
-        table_headers = ["Дата","Тип","Категорія","Сума","Статус"]
+        table_headers = ["Дата", "Тип", "Категорія", "Сума", "Статус"]
         self.table = ERMTable(columns=5, headers=table_headers)
+        # Робимо так, щоб колонки автоматично розтягувалися на всю ширину
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.verticalHeader().setVisible(False)
         
         layout.addLayout(top_panel)
         layout.addWidget(self.table)
@@ -61,8 +64,8 @@ class TransactionWindow(QWidget):
     def fill_table(self, transactions_data):
         """Приймає готовий список і просто малює його на екрані"""
         self.table.setRowCount(0)
+        print(transactions_data)
         
-        # Твій оригінальний цикл переїжджає сюди, але працює з переданим списком
         for row_idx, row_data in enumerate(transactions_data):
             self.table.insertRow(row_idx)
             real_db_id = row_data[0]
@@ -81,7 +84,6 @@ class TransactionWindow(QWidget):
                 cell_widget = QTableWidgetItem(item_text)
                 cell_widget.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.table.setItem(row_idx, col_idx, cell_widget)
-
 
 
 class AddTransactionDialog(QDialog):
