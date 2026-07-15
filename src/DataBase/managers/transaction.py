@@ -23,25 +23,23 @@ class TransactionManager(DatabaseManager):
                 type TEXT NOT NULL,
                 category TEXT,
                 sum REAL NOT NULL,
-                status TEXT DEFAULT 'Заплановано',
-                json_datails TEXT,
+                comment TEXT,
                 receipt_path TEXT
             )
             """)
             conn.commit()
             print("Database created successfully")
 
-    def add_transaction(self, trans_type, category, amount, status="Проведено", ai_details = None, receipt_path= None):
+    def add_transaction(self, trans_type, category, amount, comment="", receipt_path= None):
         """Add a transaction to the database"""
         current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        json_str = json.dumps(ai_details) if ai_details else None
 
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO transactions(date, type, category, sum, status, json_datails, receipt_path)
-                VALUES(?,?,?,?,?,?,?)
-            """, (current_date, trans_type, category, amount, status, json_str, receipt_path))
+                INSERT INTO transactions(date, type, category, sum, comment, receipt_path)
+                VALUES(?,?,?,?,?,?)
+            """, (current_date, trans_type, category, amount, comment, receipt_path))
             conn.commit()
             print(f"Transaction {amount} added successfully")
 
@@ -58,8 +56,31 @@ class TransactionManager(DatabaseManager):
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id,date,type, category, sum, status 
+                SELECT id,date,type, category, sum, comment, receipt_path
                 FROM transactions 
                 ORDER BY date DESC
                 """)
             return cursor.fetchall()
+        
+    def get_transaction_by_id(self, t_id):
+        """Get a transaction by its ID"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id,date,type, category, sum, comment, receipt_path
+                FROM transactions 
+                WHERE id = ?
+                """, (t_id,))
+            return cursor.fetchone()
+    
+    def edit_transaction(self, t_id, trans_type, category, amount, comment="", receipt_path=None):
+        """Edit a transaction"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE transactions
+                SET type = ?, category = ?, sum = ?, comment = ?, receipt_path = ?
+                WHERE id = ?
+            """, (trans_type, category, amount, comment, receipt_path, t_id))
+            conn.commit()   
+    

@@ -100,53 +100,7 @@ class Transactions(QWidget):
                 cell_widget.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.table.setItem(row_idx, col_idx, cell_widget)
 
-    def show_context_menu(self, position):
-        """Create and show context menu"""
-        # Отримуємо індекс рядка по якому клікнули
-        row_table = self.table.rowAt(position.y())
-        if row_table < 0:
-            return
-        # виділяємо весь рядок
-        self.table.selectRow(row_table)
-
-        # Створення меню
-        menu = QMenu()
-
-        # Додаємо дії
-        edit_action = menu.addAction("Редагувати")
-        delete_action = menu.addAction("Видалити")
-
-        # Показує меню там, де находиться курсок миші
-        action = menu.exec(self.table.viewport().mapToGlobal(position))
-
-        # Обробка вибора користувача
-        if action == edit_action:
-            self.edit_record(row_table)
-        elif action == delete_action:
-            self.delete_record(row_table)
-
-    def delete_record(self, row_table):
-        """Logic for deleting record"""
-
-        # Витягуємо id транзакції з першої колонки (індекс 0)
-        t_id_item = self.table.item(row_table, 0)
-        if not t_id_item:
-            return
-        # Дістаємо справжній ід з бази даних замість візуального тексту
-        t_id = t_id_item.data(Qt.ItemDataRole.UserRole)
-
-        # Підтвердження користувача
-        reply = QMessageBox.question(
-            self,
-            "Підтвердження",
-            f"Ви впевнені, що хочите видалити запис №{t_id}?",
-            QMessageBox.StandardButton.Yes,
-            QMessageBox.StandardButton.No
-        )
-        if reply == QMessageBox.StandardButton.Yes:
-            self.db.delete_transaction(t_id)
-            # оновлення
-            self.load_data()
+  
 
     def edit_record(self, row_table):
         """Logic for editing record"""

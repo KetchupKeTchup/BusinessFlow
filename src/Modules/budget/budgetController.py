@@ -37,7 +37,6 @@ class BudgetController(QWidget):
         # Підключаємо сигнал: коли користувач клікає на рядок
         self.ui.table.itemSelectionChanged.connect(self.on_table_selection_changed)
 
-
     def load_data(self):
         # Беремо рік який вибраний у випадаючому списку
         try:
@@ -171,7 +170,6 @@ class BudgetController(QWidget):
             print(f"❌ КРИТИЧНА ПОМИЛКА ГРАФІКА: {e}")
             import traceback
             traceback.print_exc()  # Це покаже точний рядок, де сталася помилка
-
 
     def open_add_transaction(self):
         # 1. Збираємо список категорій з таблиці

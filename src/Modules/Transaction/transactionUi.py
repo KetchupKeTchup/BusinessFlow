@@ -51,7 +51,7 @@ class TransactionWindow(QWidget):
         # -----------------------------------------------------------
         
         # Таблиця
-        table_headers = ["Дата", "Тип", "Категорія", "Сума", "Статус"]
+        table_headers = ["Номер", "Дата", "Дія", "Категорія", "Сума"]
         self.table = ERMTable(columns=5, headers=table_headers)
         # Робимо так, щоб колонки автоматично розтягувалися на всю ширину
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -97,7 +97,7 @@ class AddTransactionDialog(QDialog):
         layout = QFormLayout(self)
 
         self.type_combo = QComboBox()
-        self.type_combo.addItems(["Витрати", "Дохід", "Підписка","Регулярний платіж"])
+        self.type_combo.addItems(["Витрати", "Дохід"])
 
         self.category_input = QLineEdit()
         self.category_input.setPlaceholderText("Наприклад: Продукти, Авто...")
@@ -110,11 +110,24 @@ class AddTransactionDialog(QDialog):
         validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         self.sum_input.setValidator(validator)
 
+        # Коментарій 
+        self.comment = QTextEdit()
+        self.comment.setPlaceholderText("Додатковий коментарій до транзакції (не обов'язково)")
+
+        # Добавлення фактур 
+        layout_browse = QHBoxLayout()
+        self.file_path_input = QLineEdit()
+        self.file_path_input.setPlaceholderText("Файл не вибрано...")
+        self.btn_browse = QPushButton("📁")
+        # self.btn_browse.clicked.connect(self.browse_file)
 
         #Кнопки
         btn_layout = QHBoxLayout()
         self.btn_save = QPushButton("Зберегти")
         self.btn_cancel = QPushButton("Скасувати")
+        
+        layout_browse.addWidget(self.file_path_input)
+        layout_browse.addWidget(self.btn_browse)
 
         btn_layout.addWidget(self.btn_save)
         btn_layout.addWidget(self.btn_cancel)
@@ -122,6 +135,9 @@ class AddTransactionDialog(QDialog):
         layout.addRow("Тип", self.type_combo)
         layout.addRow("Категорія", self.category_input)
         layout.addRow("Сума", self.sum_input)
+        layout.addRow("Коментар", self.comment) 
+        
+        layout.addRow(layout_browse)  
         layout.addRow(btn_layout)
 
         self.btn_save.clicked.connect(self.accept)
@@ -129,3 +145,110 @@ class AddTransactionDialog(QDialog):
         
 
 
+class EditTransactionDialog(QDialog):
+    """Спливаюче вікно для редагування транзакції"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Редагувати транзакцію")
+        self.setFixedSize(850,400)
+
+        layout = QFormLayout(self)
+
+        self.type_combo = QComboBox()
+        self.type_combo.addItems(["Витрати", "Дохід"])
+
+        self.category_input = QLineEdit()
+        self.category_input.setPlaceholderText("Наприклад: Продукти, Авто...")
+
+        self.sum_input = QLineEdit()
+        self.sum_input.setPlaceholderText("0.00")
+        
+        # Валідатор від 0.0 до 100000, максимум 2 знаки після коми
+        validator = QDoubleValidator(0.0, 1000000.0, 2)
+        
+        # StandardNotation гарантує, що не буде експонеційного формату(типу 1е+06)
+        validator.setNotation(QDoubleValidator.Notation.StandardNotation)
+        self.sum_input.setValidator(validator)
+
+        # Коментарій 
+        self.comment = QTextEdit()
+        self.comment.setPlaceholderText("Додатковий коментарій до транзакції (не обов'язково)")
+
+        # Добавлення фактур 
+        layout_browse = QHBoxLayout()
+        self.file_path_input = QLineEdit()
+        self.file_path_input.setPlaceholderText("Файл не вибрано...")
+        self.btn_browse = QPushButton("📁")
+        # self.btn_browse.clicked.connect(self.browse_file)
+
+        #Кнопки
+        btn_layout = QHBoxLayout()
+        self.btn_save = QPushButton("Зберегти")
+        self.btn_cancel = QPushButton("Скасувати")
+        
+        layout_browse.addWidget(self.file_path_input)
+        layout_browse.addWidget(self.btn_browse)
+
+        btn_layout.addWidget(self.btn_save)
+        btn_layout.addWidget(self.btn_cancel)
+
+        layout.addRow("Тип", self.type_combo)
+        layout.addRow("Категорія", self.category_input)
+        layout.addRow("Сума", self.sum_input)
+        layout.addRow("Коментар", self.comment) 
+        
+        layout.addRow(layout_browse)  
+        layout.addRow(btn_layout)
+
+        self.btn_save.clicked.connect(self.accept)
+        self.btn_cancel.clicked.connect(self.reject)
+
+    def fill_data(self, data):
+        # Заповнює таблицю існуючими даними
+        # data = (id, date, type, category, sum, comment, receipt_path)
+        t_type = data[2]
+        t_category = data[3]
+        t_sum = data[4]
+        t_comment = data[5]
+
+        index = self.type_combo.findText(t_type)
+        if index >= 0:
+            self.type_combo.setCurrentIndex(index)
+
+        self.category_input.setText(str(t_category))
+        self.sum_input.setText(str(t_sum))
+        
+        # Якщо коментар не None, вставляємо його
+        if t_comment:
+            self.comment.setText(str(t_comment))
+
+
+
+class ShowFullInfoDialog(QDialog):
+    """Спливаюче вікно для перегляду повної інформації про транзакцію"""
+    
+    def __init__(self, transaction_data, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Повна інформація про транзакцію")
+        self.setFixedSize(400, 300)
+
+        layout = QFormLayout(self)
+
+        # Відображення даних транзакції
+        self.id_label = QLabel(str(transaction_data[0]))
+        self.date_label = QLabel(transaction_data[1])
+        self.type_label = QLabel(transaction_data[2])
+        self.category_label = QLabel(transaction_data[3])
+        self.sum_label = QLabel(str(transaction_data[4]))
+        self.comment_label = QLabel(transaction_data[5] if transaction_data[5] else "Немає коментаря")
+        self.receipt_path_label = QLabel(transaction_data[6] if transaction_data[6] else "Файл не додано")
+
+        layout.addRow("ID:", self.id_label)
+        layout.addRow("Дата:", self.date_label)
+        layout.addRow("Тип:", self.type_label)
+        layout.addRow("Категорія:", self.category_label)
+        layout.addRow("Сума:", self.sum_label)
+        layout.addRow("Коментар:", self.comment_label)
+        layout.addRow("Шлях до файлу:", self.receipt_path_label)
+        pass

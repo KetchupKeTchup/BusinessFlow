@@ -28,7 +28,6 @@ class FeedbackController(QWidget):
         try:
             self.ui.table.setRowCount(0)
             feedbacks = self.service.get_all_feedbacks()
-            print(f"Отримано даних з БД: {len(feedbacks)} записів")
 
             if not feedbacks:
                 print("БД порожня (або повернула пустий список).")
@@ -56,7 +55,6 @@ class FeedbackController(QWidget):
                     except IndexError:
                         print(f"❌ ПОМИЛКА: Немає колонки {db_col} в даних з БД! Довжина рядка: {len(row_data)}")
 
-            print("--- КІНЕЦЬ load_data ---")
         except Exception as e:
             print(f"❌ КРИТИЧНА ПОМИЛКА в load_data: {e}")
 

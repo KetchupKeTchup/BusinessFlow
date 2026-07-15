@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import QHeaderView, QMessageBox, QTableWidgetItem, QDialog, QMenu, QWidget, QVBoxLayout
 from PyQt6.QtCore import Qt
 
-from src.Modules.Transaction.transactionUi import TransactionWindow, AddTransactionDialog
+from src.Modules.Transaction.transactionUi import TransactionWindow, AddTransactionDialog, ShowFullInfoDialog, EditTransactionDialog
+
 from src.Modules.Transaction.transactionService import TransactionService
 
 class TransactionController(QWidget):
@@ -36,6 +37,7 @@ class TransactionController(QWidget):
             t_type = dialog.type_combo.currentText()
             t_category = dialog.category_input.text()
             raw_sum_text = dialog.sum_input.text()
+            comment = dialog.comment.toPlainText()  
 
             if not raw_sum_text:
                 QMessageBox.warning(self, "Помилка", "Сума не може бути порожньою!")
@@ -45,7 +47,7 @@ class TransactionController(QWidget):
                 QMessageBox.warning(self, "Помилка", "Сума повинна бути більшою за нуль!")
                 return
             
-            self.service.add_transaction(trans_type=t_type, category=t_category, amount=t_sum)
+            self.service.add_transaction(trans_type=t_type, category=t_category, amount=t_sum, comment=comment)
             self.load_data()
         
     def load_data(self):
@@ -66,6 +68,7 @@ class TransactionController(QWidget):
         menu = QMenu()
 
         # Додаємо дії
+        full_info = menu.addAction("Подивитись інформацію")
         edit_action = menu.addAction("Редагувати")
         delete_action = menu.addAction("Видалити")
 
@@ -73,6 +76,8 @@ class TransactionController(QWidget):
         action = menu.exec(self.ui.table.viewport().mapToGlobal(position))
 
         # Обробка вибора користувача
+        if action == full_info:
+            self.show_full_info(row_table)
         if action == edit_action:
             self.edit_record(row_table)
         elif action == delete_action:
@@ -102,17 +107,41 @@ class TransactionController(QWidget):
             # оновлення
             self.load_data()
 
-    def edit_record(self, row_table):
+    def edit_record(self,row_table):
         """Logic for editing record"""
-        t_id = self.ui.table.item(row_table, 0).text()
-        t_sum = self.ui.table.item(row_table, 4).text()
+        
+        t_id_item = self.ui.table.item(row_table, 0)
+        if not t_id_item:
+            return
+        
+        real_transaction_id = t_id_item.data(Qt.ItemDataRole.UserRole)
+        
+        # Отримуємо свіжі дані 
+        trabsaction_data = self.service.get_transaction_by_id(real_transaction_id)
+        
+        if not trabsaction_data:
+            QMessageBox.warning(self, "Помилка", f"Транзакція з ID {real_transaction_id} не знайдена.")
+            return
+        # Transaction_data має вигляд: (id, date, type, category, sum, comment, receipt_path)
+        dialog = EditTransactionDialog()
+        dialog.fill_data(trabsaction_data)
 
-        QMessageBox.information(
-            self,
-            "Редагування",
-            f"Тут буде відкриватися модальне вікно для редагування запису #{t_id}.\nПоточна сума: {t_sum}"
-        )
+        # Збираємо зміни 
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            new_type = dialog.type_combo.currentText()
+            new_category = dialog.category_input.text()
+            raw_sum = dialog.sum_input.text()
+            new_comment = dialog.comment.text()
+
+            new_sum = float(raw_sum.replace(",", "."))
+
+            # Відправка в сервіс для зміни
+            self.service.edit_transaction(real_transaction_id, new_type, new_category, new_sum, new_comment) 
+            self.load_data()
 
 
+    def show_full_info(self, row_table):
+        show_full_info_dialog = ShowFullInfoDialog()
+        
 
 

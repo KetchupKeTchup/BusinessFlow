@@ -1,6 +1,7 @@
 """Логіка між базою даних і інтерфейсом"""
 
-from src.DataBase.db_manager import BudgetsDB, CategoriesDB, TransactionManager
+from src.DataBase.db_manager import BudgetsDB, CategoriesDB
+from src.DataBase.managers.transaction import TransactionManager
 import os
 import shutil
 from datetime import datetime
@@ -16,6 +17,7 @@ class BudgetService:
     def get_budget_stats(self, year):
         """Звертається до бази і повертає статистику (Назва, План, Факт)"""
         return self.db.get_budget_stats(year)
+    
     def update_budget(self, category_name, year, new_amount):
         """Передає нову суму в базу даних"""
         self.db.update_budget_amount(category_name, year, new_amount)
