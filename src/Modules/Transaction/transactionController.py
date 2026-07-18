@@ -1,7 +1,7 @@
-from PyQt6.QtWidgets import QHeaderView, QMessageBox, QTableWidgetItem, QDialog, QMenu, QWidget, QVBoxLayout
+from PyQt6.QtWidgets import  QMessageBox, QDialog, QMenu, QWidget, QVBoxLayout
 from PyQt6.QtCore import Qt
 
-from src.Modules.Transaction.transactionUi import TransactionWindow, AddTransactionDialog, ShowFullInfoDialog, EditTransactionDialog
+from src.Modules.Transaction.transactionUi import TransactionDetailsDialog, TransactionWindow, AddTransactionDialog, EditTransactionDialog
 
 from src.Modules.Transaction.transactionService import TransactionService
 
@@ -77,7 +77,7 @@ class TransactionController(QWidget):
 
         # Обробка вибора користувача
         if action == full_info:
-            self.show_full_info(row_table)
+            self.view_record(row_table)
         if action == edit_action:
             self.edit_record(row_table)
         elif action == delete_action:
@@ -139,9 +139,45 @@ class TransactionController(QWidget):
             self.service.edit_transaction(real_transaction_id, new_type, new_category, new_sum, new_comment) 
             self.load_data()
 
+    def view_record(self, row_table):
+        """Логіка для перегляду одного запису"""
+        # 1. Витягуємо справжній ID з прихованої пам'яті
+        t_id_item = self.ui.table.item(row_table, 0)
+        if not t_id_item:
+            return
+        real_transaction_id = t_id_item.data(Qt.ItemDataRole.UserRole)
 
-    def show_full_info(self, row_table):
-        show_full_info_dialog = ShowFullInfoDialog()
-        
+        # 2. Отримуємо свіжі дані з бази
+        transaction_data = self.service.get_transaction_by_id(real_transaction_id)
+        if not transaction_data:
+            QMessageBox.warning(self, "Помилка", f"Запис {real_transaction_id} не знайдено.")
+            return
+
+        # 3. Відкриваємо вікно перегляду (з імпортованого TransactionDetailsDialog)
+        dialog = TransactionDetailsDialog()
+        dialog.fill_data(transaction_data)
+        dialog.exec()
+
+    def open_add_new_transaction(self):
+            dialog = AddTransactionDialog()
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                
+                t_type = dialog.type_combo.currentText()
+                t_category = dialog.category_input.text()
+                raw_sum_text = dialog.sum_input.text()
+                t_comment = dialog.comment.toPlainText()
+                
+                # НОВЕ: Забираємо шлях до файлу з вікна
+                original_file = dialog.selected_file_path 
+
+                # Віддаємо все Сервісу.
+                success, error_msg = self.service.add_transaction(
+                    t_type, t_category, raw_sum_text, t_comment, original_file
+                )
+                
+                if not success:
+                    QMessageBox.warning(self, "Помилка", error_msg)
+                else:
+                    self.load_data()
 
 
