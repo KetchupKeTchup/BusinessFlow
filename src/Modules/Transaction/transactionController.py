@@ -131,12 +131,13 @@ class TransactionController(QWidget):
             new_type = dialog.type_combo.currentText()
             new_category = dialog.category_input.text()
             raw_sum = dialog.sum_input.text()
-            new_comment = dialog.comment.text()
+            new_comment = dialog.comment.toPlainText()
+            new_receipt_path = dialog.selected_file_path  # Новий шлях до файлу, якщо користувач вибрав новий
 
             new_sum = float(raw_sum.replace(",", "."))
 
             # Відправка в сервіс для зміни
-            self.service.edit_transaction(real_transaction_id, new_type, new_category, new_sum, new_comment) 
+            self.service.edit_transaction(real_transaction_id, new_type, new_category, new_sum, new_comment, new_receipt_path) 
             self.load_data()
 
     def view_record(self, row_table):

@@ -6,7 +6,7 @@ class ERMMainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("ERM")
-        self.resize(1750, 900)
+        self.resize(1450, 800)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)

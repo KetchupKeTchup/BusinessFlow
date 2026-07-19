@@ -2,12 +2,13 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QHeaderView, QLabel,
     QDialog, QFormLayout, QComboBox, QTextEdit, QMessageBox, QTableWidgetItem, QLineEdit, QFileDialog
 )
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QDoubleValidator
+
+from PyQt6.QtCore import Qt,QUrl
+from PyQt6.QtGui import QDoubleValidator, QPixmap, QDesktopServices
 from src.UI.components.erm_table import ERMTable
 import os  
-from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtCore import QUrl
+import json
+
 
 
 
@@ -115,12 +116,13 @@ class AddTransactionDialog(QDialog):
         self.comment.setPlaceholderText("Додатковий коментарій до транзакції (не обов'язково)")
 
         # Добавлення фактур 
-        self.selected_file_path = None # Тут будемо зберігати тимчасовий шлях
+        self.selected_file_path = [] # Тут будемо зберігати тимчасовий шлях
         layout_browse = QHBoxLayout()
-        self.btn_browse = QPushButton("📎 Вибрати файл")
+        self.btn_browse = QPushButton("📎 Вибрати файли")
         self.lbl_file_name = QLabel("Файл не вибрано")
+        self.lbl_file_name.setWordWrap(True)  # Додаємо перенесення тексту, якщо він довгий
         self.btn_browse.clicked.connect(self.select_file)
-        # self.btn_browse.clicked.connect(self.browse_file)
+
 
         #Кнопки
         btn_layout = QHBoxLayout()
@@ -145,27 +147,41 @@ class AddTransactionDialog(QDialog):
         self.btn_cancel.clicked.connect(self.reject)
 
     def select_file(self):
-        """Відкриває вікно вибору файлу"""
-        file_path, _ = QFileDialog.getOpenFileName(
+        """Відкриває вікно вибору файлів"""
+        file_paths, _ = QFileDialog.getOpenFileNames(
+            # Повертає список шляхів (підчеркування в перемінй означає, що я знаю що повернеться другий аргумент але я його не буду використовувати, сміття)
             self,
-            "Виберіть документ",
+            "Виберіть документи",
             "",
             "Документи та Зображення (*.pdf *.png *.jpg *.jpeg)"
         )
-            
-        if file_path:
-            self.selected_file_path = file_path
-            # Показуємо користувачу тільки ім'я файлу, а не весь довгий шлях
-            file_name = os.path.basename(file_path)
-            self.lbl_file_name.setText(file_name)
-            
+        # Перевірка на дублікати, попередження про те що додаємо 2 одинакових файли до транзакції
+        if file_paths:
+            for path in file_paths:
+                if path in self.selected_file_path:
+                    reply = QMessageBox.question(
+                        self,
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                        QMessageBox.StandardButton.No
+                    )
+                    # Якщо користувач натиснув No просто пропускаємо файл і йдемо далі
+                    if reply == QMessageBox.StandardButton.No:
+                        continue
+                self.selected_file_path.append(path)
+        
+        if self.selected_file_path:
+            names = [f" {os.path.basename(p)}" for p in self.selected_file_path]
+            self.lbl_file_name.setText("\n".join(names))
 
+            
 
 class EditTransactionDialog(QDialog):
     """Спливаюче вікно для редагування транзакції"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.current_files = []
+        self.new_files_to_add = []
         self.setWindowTitle("Редагувати транзакцію")
         self.setFixedSize(850,400)
 
@@ -192,9 +208,12 @@ class EditTransactionDialog(QDialog):
         self.comment.setPlaceholderText("Додатковий коментарій до транзакції (не обов'язково)")
 
         # Добавлення фактур 
+        # Добавлення фактур 
+        self.selected_file_path = None # Тут будемо зберігати тимчасовий шлях
         layout_browse = QHBoxLayout()
-        self.btn_browse = QPushButton("📁")
-        # self.btn_browse.clicked.connect(self.browse_file)
+        self.btn_browse = QPushButton("📎 Вибрати файли")
+        self.lbl_file_name = QLabel("Файли не вибрано")
+        self.btn_browse.clicked.connect(self.select_file)
 
         #Кнопки
         btn_layout = QHBoxLayout()
@@ -202,6 +221,7 @@ class EditTransactionDialog(QDialog):
         self.btn_cancel = QPushButton("Скасувати")
 
         layout_browse.addWidget(self.btn_browse)
+        layout_browse.addWidget(self.lbl_file_name)
 
         btn_layout.addWidget(self.btn_save)
         btn_layout.addWidget(self.btn_cancel)
@@ -236,7 +256,25 @@ class EditTransactionDialog(QDialog):
         if t_comment:
             self.comment.setText(str(t_comment))
 
+        self.current_files = json.loads(data[6]) if data[6] else []
+        self.refresh_file_list()
 
+    def refresh_file_list(self):
+        pass
+
+    def select_file(self):
+        """Відкриває вікно вибору файлу"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Виберіть документ",
+            "",
+            "Документи та Зображення (*.pdf *.png *.jpg *.jpeg)"
+        )
+        if file_path:
+            self.selected_file_path = file_path
+            # Показуємо користувачу тільки ім'я файлу, а не весь довгий шлях
+            file_name = os.path.basename(file_path)
+            self.lbl_file_name.setText(file_name)
 
 class TransactionDetailsDialog(QDialog):
     """Модальне вікно для перегляду деталей транзакції (Тільки для читання)"""
@@ -264,8 +302,10 @@ class TransactionDetailsDialog(QDialog):
         self.lbl_comment = QLabel()
         self.lbl_comment.setWordWrap(True)
 
-        # --- НОВЕ: Кнопка для відкриття фактури ---
+        # --- Кнопка для відкриття фактури ---
+        self.layout_path_file = QHBoxLayout()
         self.btn_open_receipt = QPushButton("📎 Відкрити фактуру")
+        self.layout_path_file.addWidget(self.btn_open_receipt)
         # Підключаємо клік до методу відкриття файлу
         self.btn_open_receipt.clicked.connect(self.open_receipt_file) 
 
@@ -275,7 +315,7 @@ class TransactionDetailsDialog(QDialog):
         layout.addRow("Категорія:", self.lbl_category)
         layout.addRow("Сума:", self.lbl_sum)
         layout.addRow("Коментар:", self.lbl_comment)
-        layout.addRow("Документ:", self.btn_open_receipt) # Додали в макет
+        layout.addRow("Документ:", self.layout_path_file) # Додали в макет
 
         self.btn_close = QPushButton("Закрити")
         self.btn_close.clicked.connect(self.accept)
@@ -294,23 +334,18 @@ class TransactionDetailsDialog(QDialog):
         self.lbl_comment.setText(str(comment) if comment else "—")
 
         # --- НОВЕ: Логіка для кнопки фактури ---
-        receipt_path = data[6]
+        receipt_paths = json.loads(data[6]) if data[6] else []
         
-        if receipt_path and os.path.exists(receipt_path):
-            # Якщо шлях є в базі і файл реально існує на диску
-            self.current_receipt_path = receipt_path
-            self.btn_open_receipt.setEnabled(True)
-            self.btn_open_receipt.setText("📎 Відкрити документ")
-        elif receipt_path and not os.path.exists(receipt_path):
-             # Якщо шлях у базі є, але файл випадково видалили з комп'ютера
-            self.current_receipt_path = None
-            self.btn_open_receipt.setEnabled(False)
-            self.btn_open_receipt.setText("❌ Файл не знайдено")
+        if receipt_paths:
+            for path in receipt_paths:
+                if os.path.exists(path):
+                    btn = QPushButton(f"📎 Відкрити: {os.path.basename(path)}")
+                    btn.clicked.connect(lambda checked, p=path: self.open_file(p))
+                    self.layout_path_file.addWidget(btn) # Додаємо в макет
+                else:
+                    self.layout_path_file.addWidget(QLabel(f"❌ Файл не знайдено: {os.path.basename(path)}"))
         else:
-            # Якщо до цієї транзакції взагалі нічого не прикріплювали
-            self.current_receipt_path = None
-            self.btn_open_receipt.setEnabled(False)
-            self.btn_open_receipt.setText("Немає прикріпленого файлу")
+            self.layout_path_file.addWidget(QLabel("Немає прикріплених файлів"))
 
     def open_receipt_file(self):
         """Відкриває файл стандартною програмою ОС (наприклад, PDF-рідером)"""
@@ -318,3 +353,5 @@ class TransactionDetailsDialog(QDialog):
             # Перетворюємо звичайний шлях у формат URL, який розуміє QDesktopServices
             file_url = QUrl.fromLocalFile(os.path.abspath(self.current_receipt_path))
             QDesktopServices.openUrl(file_url)
+    def open_file(self, path):
+        QDesktopServices.openUrl(QUrl.fromLocalFile(os.path.abspath(path)))
