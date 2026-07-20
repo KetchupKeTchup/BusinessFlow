@@ -319,7 +319,7 @@ class TransactionDetailsDialog(QDialog):
 
         self.btn_close = QPushButton("Закрити")
         self.btn_close.clicked.connect(self.accept)
-        layout.addRow("", self.btn_close)
+        layout.addRow(self.btn_close)
 
     def fill_data(self, data):
         """Заповнює текстові мітки даними з бази"""
@@ -342,6 +342,7 @@ class TransactionDetailsDialog(QDialog):
                     btn = QPushButton(f"📎 Відкрити: {os.path.basename(path)}")
                     btn.clicked.connect(lambda checked, p=path: self.open_file(p))
                     self.layout_path_file.addWidget(btn) # Додаємо в макет
+                    self.btn_open_receipt.setHidden(True)
                 else:
                     self.layout_path_file.addWidget(QLabel(f"❌ Файл не знайдено: {os.path.basename(path)}"))
         else:
